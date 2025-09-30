@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HR Analytics Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <h1>HR Analytics Dashboard</h1>
+        <div class="header-controls">
+          <div class="file-input-wrapper">
+            <input type="file" id="fileInput" accept=".xlsx, .xls" />
+            <button
+              class="file-input-button"
+              onclick="document.getElementById('fileInput').click();"
+            >
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>Choose Excel File</span>
+            </button>
+            <span class="file-name" id="fileName">No file selected</span>
+          </div>
+
+          <!-- Sheet Selector Dropdown -->
+          <div class="sheet-selector" id="sheetSelector" style="display: none">
+            <label>Sheet:</label>
+            <select id="sheetSelect">
+              <option value="">Select a sheet</option>
+            </select>
+          </div>
+
+          <button id="exportData" class="btn btn-export">
+            <i class="fas fa-file-export"></i> Export Data
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Filters -->
+      <div class="filters-section">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search employees by EEID, name, job title, department, etc..."
+          />
+          <button id="toggleFiltersBtn">
+            <i class="fas fa-filter"></i> Show Filters
+          </button>
+        </div>
+
+        <div
+          id="filtersContainer"
+          class="filters-container"
+          style="display: none"
+        >
+          <div class="filter-grid">
+            <div class="filter-group">
+              <label>Department</label>
+              <select id="departmentFilter">
+                <option value="">All Departments</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Job Title</label>
+              <select id="jobTitleFilter">
+                <option value="">All Job Titles</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Job Grade</label>
+              <select id="jobGradeFilter">
+                <option value="">All Job Grades</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Gender</label>
+              <select id="genderFilter">
+                <option value="">All Genders</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Country</label>
+              <select id="countryFilter">
+                <option value="">All Countries</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>City</label>
+              <select id="cityFilter">
+                <option value="">All Cities</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Business Unit</label>
+              <select id="businessUnitFilter">
+                <option value="">All Business Units</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Ethnicity</label>
+              <select id="ethnicityFilter">
+                <option value="">All Ethnicities</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Bonus</label>
+              <select id="bonusFilter">
+                <option value="">All Employees</option>
+                <option value="with-bonus">With Bonus</option>
+                <option value="no-bonus">No Bonus</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Status</label>
+              <select id="exitStatusFilter">
+                <option value="">All Employees</option>
+                <option value="active">Active Only</option>
+                <option value="exited">Exited Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="range-filters-row">
+            <div class="range-filter salary-range">
+              <div class="range-header">
+                <label>Salary Range</label>
+                <div class="range-values">
+                  <span id="salaryMinValue">RM0</span>
+                  <span> - </span>
+                  <span id="salaryMaxValue">RM0</span>
+                </div>
+              </div>
+              <div class="range-slider-container">
+                <div class="range-track"></div>
+                <div class="range-slider">
+                  <input
+                    type="range"
+                    id="minSalarySlider"
+                    min="0"
+                    max="200000"
+                    value="0"
+                    step="1000"
+                  />
+                  <input
+                    type="range"
+                    id="maxSalarySlider"
+                    min="0"
+                    max="200000"
+                    value="200000"
+                    step="1000"
+                  />
+                  <div class="range-progress"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="range-filter age-range">
+              <div class="range-header">
+                <label>Age Range</label>
+                <div class="range-values">
+                  <span id="ageMinValue">0</span>
+                  <span> - </span>
+                  <span id="ageMaxValue">0</span>
+                </div>
+              </div>
+              <div class="range-slider-container">
+                <div class="range-track"></div>
+                <div class="range-slider">
+                  <input
+                    type="range"
+                    id="minAgeSlider"
+                    min="18"
+                    max="70"
+                    value="18"
+                    step="1"
+                  />
+                  <input
+                    type="range"
+                    id="maxAgeSlider"
+                    min="18"
+                    max="70"
+                    value="70"
+                    step="1"
+                  />
+                  <div class="range-progress"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-actions">
+            <button onclick="filterData()" class="apply-btn">
+              <i class="fas fa-check"></i> Apply Filters
+            </button>
+            <button id="resetFilters" class="reset-btn">
+              <i class="fas fa-redo"></i> Reset All Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-section">
+        <div class="kpi-card">
+          <h3>Total Employees</h3>
+          <div class="kpi-value" id="totalEmployees">0</div>
+          <div class="kpi-subtext" id="activeEmployees">0 Active</div>
+        </div>
+        <div class="kpi-card">
+          <h3>Avg. Salary</h3>
+          <div class="kpi-value" id="avgSalary">RM0</div>
+          <div class="kpi-subtext" id="salaryRange">RM0 - RM0</div>
+        </div>
+        <div class="kpi-card">
+          <h3>Avg. Age</h3>
+          <div class="kpi-value" id="avgAge">0</div>
+          <div class="kpi-subtext" id="ageRange">0 - 0 yrs</div>
+        </div>
+        <div class="kpi-card">
+          <h3>Avg. Tenure</h3>
+          <div class="kpi-value" id="avgTenure">0 yrs</div>
+          <div class="kpi-subtext" id="tenureRange">0 - 0 yrs</div>
+        </div>
+
+        <div class="kpi-card-bottom">
+          <div class="kpi-card">
+            <h3>Total Bonus</h3>
+            <div class="kpi-value" id="totalBonus">RM0</div>
+            <div class="kpi-subtext" id="bonusEmployees">0 Employees</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Avg Medical Usage</h3>
+            <div class="kpi-value" id="avgMedical">RM0</div>
+            <div class="kpi-subtext" id="medicalRange">RM0 - RM0</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Exit Rate</h3>
+            <div class="kpi-value" id="exitRate">0%</div>
+            <div class="kpi-subtext" id="exitedCount">0 Exited</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <div class="charts-section">
+        <div class="chart-container">
+          <h3>Gender Distribution by Department</h3>
+          <canvas id="genderDeptChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Salary by Job Grade</h3>
+          <canvas id="salaryGradeChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Headcount by Country & City</h3>
+          <canvas id="locationChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Business Unit Distribution</h3>
+          <canvas id="businessUnitChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Bonus Distribution</h3>
+          <canvas id="bonusChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Medical Usage by Age Group</h3>
+          <canvas id="medicalAgeChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Employee Table -->
+      <div class="table-section">
+        <div class="table-header">
+          <h3>Employee Details</h3>
+          <div class="table-controls">
+            <div class="table-search">
+              <input
+                type="text"
+                id="tableSearch"
+                placeholder="Search employees by EEID, name, job title, department, etc..."
+              />
+              <button id="toggleTableFiltersBtn">
+                <i class="fas fa-filter"></i> Show Filters
+              </button>
+            </div>
+
+            <div
+              id="tableFiltersContainer"
+              class="table-filters-container"
+              style="display: none"
+            >
+              <div class="table-filter-grid">
+                <div class="filter-group">
+                  <label>Department</label>
+                  <select id="tableDepartmentFilter">
+                    <option value="">All Departments</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>Country</label>
+                  <select id="tableCountryFilter">
+                    <option value="">All Countries</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>City</label>
+                  <select id="tableCityFilter">
+                    <option value="">All Cities</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>Gender</label>
+                  <select id="tableGenderFilter">
+                    <option value="">All Genders</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>Job Title</label>
+                  <select id="tableJobTitleFilter">
+                    <option value="">All Job Titles</option>
+                  </select>
+                </div>
+                <div class="filter-group">
+                  <label>Bonus</label>
+                  <select id="tableBonusFilter">
+                    <option value="">All Employees</option>
+                    <option value="bonus">With Bonus</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="table-filter-actions">
+                <button onclick="filterTable()" class="apply-btn">
+                  <i class="fas fa-check"></i> Apply Filters
+                </button>
+                <button id="resetTableFilters" class="reset-btn">
+                  <i class="fas fa-redo"></i> Reset Filters
+                </button>
+              </div>
+            </div>
+
+            <div class="rows-per-page">
+              <label>Show:</label>
+              <select id="rowsPerPage" onchange="changeRowsPerPage()">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table id="employeeTable">
+            <thead>
+              <tr>
+                <th onclick="sortTable(0)">EEID ▲▼</th>
+                <th onclick="sortTable(1)">Full Name ▲▼</th>
+                <th onclick="sortTable(2)">Job Title ▲▼</th>
+                <th onclick="sortTable(3)">Grade ▲▼</th>
+                <th onclick="sortTable(4)">Department ▲▼</th>
+                <th onclick="sortTable(5)">Business Unit ▲▼</th>
+                <th onclick="sortTable(6)">Gender ▲▼</th>
+                <th onclick="sortTable(7)">Ethnicity ▲▼</th>
+                <th onclick="sortTable(8)">Age ▲▼</th>
+                <th onclick="sortTable(9)">Hire Date ▲▼</th>
+                <th onclick="sortTable(10)">Salary ▲▼</th>
+                <th onclick="sortTable(11)">Bonus % ▲▼</th>
+                <th onclick="sortTable(12)">Country ▲▼</th>
+                <th onclick="sortTable(13)">City ▲▼</th>
+                <th onclick="sortTable(14)">Exit Date ▲▼</th>
+                <th onclick="sortTable(15)">Medical Usage ▲▼</th>
+                <th>Sheet</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTableBody">
+              <!-- Data will be populated here -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination-controls">
+          <div class="pagination-info" id="paginationInfo">
+            Showing 0 of 0 employees
+          </div>
+          <div class="pagination-buttons">
+            <button id="firstPage" onclick="goToPage(1)" disabled>First</button>
+            <button id="prevPage" onclick="previousPage()" disabled>
+              Previous
+            </button>
+            <span id="pageNumbers" class="page-numbers"></span>
+            <button id="nextPage" onclick="nextPage()" disabled>Next</button>
+            <button id="lastPage" onclick="goToPage(totalPages)" disabled>
+              Last
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sheet Selection Modal -->
+    <div id="sheetModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Select Sheet Processing Option</h3>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>
+            Your Excel file contains multiple sheets. Please select how you'd
+            like to process them:
+          </p>
+
+          <div class="processing-options">
+            <div class="option-card">
+              <input
+                type="radio"
+                id="selectSingle"
+                name="processingOption"
+                value="single"
+                checked
+              />
+              <label for="selectSingle">
+                <h4>Select a Single Sheet</h4>
+                <p>Choose one specific sheet to analyze</p>
+              </label>
+              <div class="sheet-selection" id="singleSheetSelection">
+                <div class="sheet-list" id="singleSheetList">
+                  <!-- Sheet options will be added here -->
+                </div>
+              </div>
+            </div>
+
+            <div class="option-card">
+              <input
+                type="radio"
+                id="selectMultiple"
+                name="processingOption"
+                value="multiple"
+              />
+              <label for="selectMultiple">
+                <h4>Select Multiple Sheets</h4>
+                <p>Choose multiple sheets to load individually</p>
+              </label>
+              <div
+                class="sheet-selection"
+                id="multipleSheetSelection"
+                style="display: none"
+              >
+                <div class="sheet-list" id="multipleSheetList">
+                  <!-- Sheet options will be added here -->
+                </div>
+              </div>
+            </div>
+
+            <div class="option-card">
+              <input
+                type="radio"
+                id="combineAll"
+                name="processingOption"
+                value="combine"
+              />
+              <label for="combineAll">
+                <h4>Combine All Sheets</h4>
+                <p>
+                  Merge data from all sheets (requires identical column
+                  structure)
+                </p>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button id="processSheetsBtn" class="btn btn-primary">
+              Process Sheets
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SmartBot Chatbot Widget -->
+    <div id="chatbot-widget" class="minimized">
+      <div id="chatbot-button">
+        <i class="fas fa-robot"></i>
+        <span>SmartBot</span>
+        <span id="chatbot-status" class="chatbot-status"></span>
+      </div>
+      <div id="chatbot-window">
+        <div id="chatbot-header">
+          <div class="chatbot-title">
+            <i class="fas fa-robot"></i>
+            <h3>SmartBot</h3>
+            <div id="chatbot-connection-status" class="connection-status">
+              <span class="status-dot"></span>
+              <span class="status-text">Connecting...</span>
+            </div>
+          </div>
+          <button id="chatbot-close">&times;</button>
+        </div>
+        <div id="chatbot-messages">
+          <div class="chat-message bot-message">
+            <div class="message-content">
+              <p>
+                Hello! I'm SmartBot, your HR data assistant. Ask me anything
+                about your employee data, analytics, or general HR questions.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div id="chatbot-input-area">
+          <input
+            type="text"
+            id="chatbot-input"
+            placeholder="Ask about your data..."
+          />
+          <button id="chatbot-send">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+        <div id="chatbot-typing">
+          <div class="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>SmartBot is thinking...</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
