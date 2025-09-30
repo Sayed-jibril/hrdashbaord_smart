@@ -1493,38 +1493,30 @@ function initializeSmartBot() {
   }
 
   // Function to fetch response from Python backend
-const API_BASE =
-  window.location.hostname === "localhost"
-    ? "http://localhost:5000"
-    : "https://hrdashbaord-smart.onrender.com";
-
   async function fetchPythonBackend(userMessage, dataSummary) {
-    const response = await fetch(`${API_BASE}/chat`, {
+    const response = await fetch("http://localhost:5000/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         message: userMessage,
-        data_summary: JSON.stringify(dataSummary || {}), // ensure JSON
-        session_id: "demo",
-        conversation_history: []
+        data_summary: dataSummary,
       }),
     });
-  
+
     if (!response.ok) {
       throw new Error(`API request failed with status ${response.status}`);
     }
-  
+
     const data = await response.json();
-  
+
     if (data.error) {
       throw new Error(data.error);
     }
-  
-    return data;
+
+    return data.response;
   }
-  
 
   // Function to check chatbot connection
   function checkChatbotConnection() {
@@ -1657,8 +1649,3 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize SmartBot
   initializeSmartBot();
 });
-
-
-
-
-
