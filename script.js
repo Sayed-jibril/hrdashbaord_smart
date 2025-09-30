@@ -1520,7 +1520,7 @@ function initializeSmartBot() {
 
   // Function to check chatbot connection
   function checkChatbotConnection() {
-    fetch("https://hrdashbaord-smart.onrender.com//chat", {
+    fetch("https://hrdashbaord-smart.onrender.com/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1649,4 +1649,5 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize SmartBot
   initializeSmartBot();
 });
+
 
