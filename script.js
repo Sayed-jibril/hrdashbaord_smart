@@ -1528,7 +1528,7 @@ const API_BASE =
 
   // Function to check chatbot connection
   function checkChatbotConnection() {
-    fetch("https://hrdashbaord-smart.onrender.com/chat", {
+    fetch("http://localhost:5000/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1657,6 +1657,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize SmartBot
   initializeSmartBot();
 });
+
 
 
 
