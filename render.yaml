@@ -1,7 +1,10 @@
 services:
   - type: web
-    name: hr-chatbot
+    name: hr-analytics-chatbot
     env: python
     plan: free
-    buildCommand: ""
-    startCommand: "python chatbot.py"
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: OPENAI_API_KEY
+        value: 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
