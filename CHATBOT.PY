@@ -11,8 +11,8 @@ import re
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Set your OpenAI API key
-openai.api_key = "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"  # Replace with your actual API key
+# Set your OpenAI API key from environment variable
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 # In-memory storage for conversation sessions
 conversation_sessions = {}
@@ -148,4 +148,5 @@ def enhance_response_formatting(response, data):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)
