@@ -1494,7 +1494,7 @@ function initializeSmartBot() {
 
   // Function to fetch response from Python backend
   async function fetchPythonBackend(userMessage, dataSummary) {
-    const response = await fetch("http://localhost:5000/chat", {
+    const response = await fetch("https://hrdashbaord-smart.onrender.com/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1649,5 +1649,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initialize SmartBot
   initializeSmartBot();
 });
+
 
 
