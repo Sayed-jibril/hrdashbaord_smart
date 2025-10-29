@@ -1620,7 +1620,7 @@ document.addEventListener("DOMContentLoaded", function() {
   console.log("HR Dashboard loaded. Loading default data from GitHub...");
   
   // Load default data from GitHub
-  loadExcelFromURL('https://raw.githubusercontent.com/sayed-jibril/hrdashbaord_smart/main/data.xlsx');
+  loadExcelFromURL('https://raw.githubusercontent.com/sayed-jibril/hrdashbaord_smart/main/DATA.xlsx');
   
   // Add event listener for file input change
   document.getElementById("fileInput").addEventListener("change", function () {
@@ -1715,3 +1715,4 @@ document.addEventListener("DOMContentLoaded", function() {
   // Initialize SmartBot
   initializeSmartBot();
 });
+
