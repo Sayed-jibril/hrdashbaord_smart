@@ -9,6 +9,57 @@ let currentSort = { column: null, direction: "asc" };
 let workbookData = null; // Store workbook data for sheet selection
 let allSheetsData = {}; // Store data from all sheets for switching
 
+// Load Excel file from GitHub URL
+function loadExcelFromURL(url) {
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.arrayBuffer();
+    })
+    .then(data => {
+      const workbook = XLSX.read(data, { type: 'array' });
+      
+      // Check if workbook has multiple sheets
+      if (workbook.SheetNames.length > 1) {
+        workbookData = workbook;
+        showSheetSelectionModal(workbook.SheetNames);
+      } else {
+        // Single sheet - process directly
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        processData(jsonData, workbook.SheetNames[0]);
+        document.getElementById('fileName').textContent = `Loaded: ${workbook.SheetNames[0]}`;
+        document.getElementById('fileName').style.color = '#27ae60';
+        document.getElementById('fileName').style.fontWeight = '500';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading Excel from URL:', error);
+      document.getElementById('fileName').textContent = 'Failed to load default data';
+      document.getElementById('fileName').style.color = '#e74c3c';
+      document.getElementById('fileName').style.fontWeight = '500';
+      
+      // Show user-friendly message
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'error-message';
+      errorMessage.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>Could not load default data from GitHub. Please upload an Excel file manually.</p>
+        <button onclick="this.parentElement.remove()" class="close-error">×</button>
+      `;
+      document.querySelector('.dashboard-header').after(errorMessage);
+      
+      // Auto-remove after 10 seconds
+      setTimeout(() => {
+        if (errorMessage.parentElement) {
+          errorMessage.remove();
+        }
+      }, 10000);
+    });
+}
+
 // Load Excel file
 function loadFile() {
   const fileInput = document.getElementById("fileInput");
@@ -149,6 +200,9 @@ function processSelectedOption() {
 
       // Process the data
       processData(jsonData, sheetName);
+      document.getElementById('fileName').textContent = `Loaded: ${sheetName}`;
+      document.getElementById('fileName').style.color = '#27ae60';
+      document.getElementById('fileName').style.fontWeight = '500';
       break;
 
     case "multiple":
@@ -180,6 +234,9 @@ function processSelectedOption() {
       // Process the first sheet by default
       const firstSheetName = Object.keys(allSheetsData)[0];
       processData(allSheetsData[firstSheetName], firstSheetName);
+      document.getElementById('fileName').textContent = `Loaded: ${firstSheetName}`;
+      document.getElementById('fileName').style.color = '#27ae60';
+      document.getElementById('fileName').style.fontWeight = '500';
 
       // Hide modal
       document.getElementById("sheetModal").style.display = "none";
@@ -206,6 +263,9 @@ function processSelectedOption() {
 
       // Process the combined data
       processData(combinedData, "Combined Sheets");
+      document.getElementById('fileName').textContent = 'Loaded: Combined Sheets';
+      document.getElementById('fileName').style.color = '#27ae60';
+      document.getElementById('fileName').style.fontWeight = '500';
       break;
   }
 }
@@ -234,6 +294,9 @@ function populateSheetSelector(sheetNames) {
     const selectedSheet = this.value;
     if (selectedSheet && allSheetsData[selectedSheet]) {
       processData(allSheetsData[selectedSheet], selectedSheet);
+      document.getElementById('fileName').textContent = `Loaded: ${selectedSheet}`;
+      document.getElementById('fileName').style.color = '#27ae60';
+      document.getElementById('fileName').style.fontWeight = '500';
     }
   };
 }
@@ -353,12 +416,12 @@ function initializeSliders() {
   const salaries = allEmployees
     .map((e) => e["Annual Salary"])
     .filter((s) => s > 0);
-  const minSalary = Math.min(...salaries);
-  const maxSalary = Math.max(...salaries);
+  const minSalary = salaries.length > 0 ? Math.min(...salaries) : 0;
+  const maxSalary = salaries.length > 0 ? Math.max(...salaries) : 200000;
 
   const ages = allEmployees.map((e) => e.Age).filter((a) => a > 0);
-  const minAge = Math.min(...ages);
-  const maxAge = Math.max(...ages);
+  const minAge = ages.length > 0 ? Math.min(...ages) : 18;
+  const maxAge = ages.length > 0 ? Math.max(...ages) : 70;
 
   // Initialize salary sliders
   const minSalarySlider = document.getElementById("minSalarySlider");
@@ -1553,9 +1616,12 @@ function initializeSmartBot() {
 }
 
 // Initialize
-document.addEventListener("DOMContentLoaded", function () {
-  console.log("HR Dashboard loaded. Please upload an Excel file to begin.");
-
+document.addEventListener("DOMContentLoaded", function() {
+  console.log("HR Dashboard loaded. Loading default data from GitHub...");
+  
+  // Load default data from GitHub
+  loadExcelFromURL('https://raw.githubusercontent.com/sayed-jibril/hrdashbaord_smart/main/data.xlsx');
+  
   // Add event listener for file input change
   document.getElementById("fileInput").addEventListener("change", function () {
     updateFileName();
